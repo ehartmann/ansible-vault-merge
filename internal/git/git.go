@@ -32,15 +32,23 @@ func IsAllConflictsSolved(path string) bool {
 		}
 	}
 
-	return false
+	return true
 }
 
 func GitMerge(base string, current string, other string) error {
 	cmd := exec.Command("sh", "-c", "git merge-file -L CURRENT -L BASE -L OTHER "+current+" "+base+" "+other)
 	out, err := cmd.CombinedOutput()
 
-	log.Print(out)
-	log.Print(err.Error())
+	if err != nil {
+		log.Print(string(out))
+	}
+	return err
+}
+
+func GitAdd(path string) error {
+	cmd := exec.Command("sh", "-c", "git add "+path)
+	out, err := cmd.CombinedOutput()
+
 	if err != nil {
 		log.Print(string(out))
 	}

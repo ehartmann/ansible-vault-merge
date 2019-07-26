@@ -22,7 +22,7 @@ func init() {
 func vaultDiff(cmd *cobra.Command, args []string) {
 	path := args[0]
 
-	passwordFile := ansible.FindPasswordFile()
+	password := ansible.FindPassword()
 
-	fmt.Print(ansible.ViewFile(passwordFile, path))
+	fmt.Print(ansible.ViewFile(path, password))
 }

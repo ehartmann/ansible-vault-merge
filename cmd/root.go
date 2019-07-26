@@ -12,13 +12,11 @@ var cfgFile string
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "merge-secrets",
-	Short: "Used for git drivers on Ansible Vault files",
+	Short: "Used for git drivers for Ansible Vault files and sops files",
 	Long: `This application shows how to create modern CLI
 applications in go using Cobra CLI library`,
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -31,6 +29,5 @@ func init() {
 
 }
 
-// initConfig reads in config file and ENV variables if set.
 func initConfig() {
 }

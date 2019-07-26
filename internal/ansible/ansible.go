@@ -1,11 +1,12 @@
 package ansible
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 
+	vault "github.com/sosedoff/ansible-vault-go"
 	"gopkg.in/ini.v1"
 )
 
@@ -27,43 +28,54 @@ func visit(ansibleCfgFiles *[]string) filepath.WalkFunc {
 	}
 }
 
-func execAnsibleVault(passwordFile string, path string, command string) string {
-	cmd := exec.Command("sh", "-c", "ansible-vault "+command+" --vault-password-file "+passwordFile+" "+path)
-	out, err := cmd.CombinedOutput()
-
+func DecryptFile(path string, password string) {
+	content, err := vault.DecryptFile(path, password)
 	if err != nil {
-		log.Fatal(string(out))
+		log.Fatalf("Unable to read file [%s] : %s", path, err.Error())
+	}
+	ioutil.WriteFile(path, []byte(content), 0644)
+}
+
+func EncryptFile(path string, password string) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Unable to read file [%s] : %s", path, err.Error())
+	}
+	vault.EncryptFile(path, string(content), password)
+}
+
+func ViewFile(path string, password string) string {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Unable to read file [%s] : %s", path, err.Error())
 	}
 
-	return string(out)
+	decryptedContent, err := vault.Decrypt(string(content), password)
+	if err != nil {
+		log.Fatalf("Unable to read file [%s] : %s", path, err.Error())
+	}
+	return decryptedContent
 }
 
-func DecryptFile(passwordFile string, path string) {
-	execAnsibleVault(passwordFile, path, "decrypt")
-}
-
-func EncryptFile(passwordFile string, path string) {
-	execAnsibleVault(passwordFile, path, "encrypt")
-}
-
-func ViewFile(passwordFile string, path string) string {
-	return execAnsibleVault(passwordFile, path, "view")
-}
-
-func FindPasswordFile() string {
+func FindPassword() string {
 	ansibleCfgFile := findAnsibleCfg()
 	cfg, err := ini.Load(ansibleCfgFile)
 	if err != nil {
-		log.Fatal("Fail to read file: %v", err)
+		log.Fatalf("Unable to read file [%s] : %s", ansibleCfgFile, err.Error())
 	}
 
 	passwordFile := cfg.Section(defaults).Key(vaultPasswordFile).String()
 	if len(passwordFile) == 0 {
-		log.Fatalf("Did not find vault_password_file inside %s", ansibleCfgFile)
+		log.Fatalf("Did not find vault_password_file inside [%s]", ansibleCfgFile)
 	}
 	log.Printf("Found passwordFile %s", passwordFile)
 
-	return passwordFile
+	content, err := ioutil.ReadFile(os.ExpandEnv(passwordFile))
+	if err != nil {
+		log.Fatalf("Unable to read file [%s] : %s", passwordFile, err.Error())
+	}
+
+	return string(content[:len(content)-1])
 }
 
 func findAnsibleCfg() string {

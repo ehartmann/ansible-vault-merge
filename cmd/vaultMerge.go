@@ -29,11 +29,11 @@ func vaultMerge(cmd *cobra.Command, args []string) {
 	current := args[1]
 	other := args[2]
 
-	passwordFile := ansible.FindPasswordFile()
+	password := ansible.FindPassword()
 
-	ansible.DecryptFile(passwordFile, base)
-	ansible.DecryptFile(passwordFile, current)
-	ansible.DecryptFile(passwordFile, other)
+	ansible.DecryptFile(base, password)
+	ansible.DecryptFile(current, password)
+	ansible.DecryptFile(other, password)
 
 	err := git.GitMerge(base, current, other)
 	log.Print(err.Error())
@@ -41,12 +41,16 @@ func vaultMerge(cmd *cobra.Command, args []string) {
 		if stop {
 			log.Fatal("Conflicts detected. Stopping, do not forgot to encrypt file !")
 		}
-		utils.LaunchEditor(current, editor)
+
+		editorErr := utils.LaunchEditor(current, editor)
+		if editorErr != nil {
+			log.Fatalf("Error launching editor [%s]. Stopping here, do not forgot to encrypt file", editorErr)
+		}
+
+		if !git.IsAllConflictsSolved(current) {
+			log.Fatal("Conflict not solved. Stopping, do not forgot to encrypt file !")
+		}
 	}
 
-	if !git.IsAllConflictsSolved(current) {
-		log.Fatal("Conflict not solved. Stopping, do not forgot to encrypt file !")
-	}
-
-	ansible.EncryptFile(passwordFile, current)
+	ansible.EncryptFile(current, password)
 }
