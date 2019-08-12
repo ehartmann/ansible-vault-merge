@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"log"
 	"errors"
 	"os"
 	"os/exec"
@@ -16,7 +15,7 @@ func LaunchEditor(path string, editor string) error {
 	}
 	editorCmd := exec.Command(editor, path)
 	editorCmd.Stdin = os.Stdin
-	editorCmd.Stdout = os.Stdoutgit s
+	editorCmd.Stdout = os.Stdout
 	editorCmd.Stderr = os.Stderr
 	editorErr := editorCmd.Start()
 	if editorErr != nil {

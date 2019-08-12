@@ -15,8 +15,6 @@ var vaultMergeCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(3),
 	Run:   vaultMerge,
 }
-var editor string
-var stop bool
 
 func init() {
 	vaultMergeCmd.Flags().BoolVarP(&stop, "stop", "s", false, "Stop if there is a conflict")
